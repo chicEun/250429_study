@@ -21,6 +21,28 @@
             margin: 30px 20px 10px 20px;
         }
 
+        .input-groups {
+            margin: 30px 20px 10px 20px;
+        }
+
+        .input-groups>input {
+            width: 300px;
+            height: 35px;
+            margin: 20px 10px 0 20px;
+            border-radius: 8px;
+
+        }
+
+        .input-groups>button {
+            cursor: pointer;
+            padding: 10px 15px 10px 15px;
+            background-color: wheat;
+            border: 0;
+            border-radius: 8px;
+            margin: 0 6px 0 6px;
+        }
+
+
         .input-group>input {
             width: 600px;
             height: 35px;
@@ -39,7 +61,7 @@
         }
 
         .result {
-            margin: 30px 0 10px 60px;
+            margin: 20px 0 10px 60px;
             font-size: 20px;
             font-weight: 800;
         }
@@ -55,13 +77,18 @@
             <button onclick="walletConnect()">Connection</button>
             <button onclick="getCount()">Check</button>
             <button onclick="increment()">Increase</button>
-            <button onclick="sum()">Sum</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="target" placeholder="  Enter your number">
-            <button onclick="isOver()">Comparison</button>
         </div>
         <div class="result" id="result">result will be here</div>
+        <div class="input-groups">
+            <input type="number" id="number1" placeholder="  Enter number">
+            <input type="number" id="number2" placeholder="  Enter number">
+            <button onclick="sum()">Sum</button>
+        </div>
+        <div class="result" id="result2">target here</div>
+        <div class="input-group">
+            <input type="text" id="target" placeholder="  Enter number">
+            <button onclick="isOver()">Comparison</button>
+        </div>
         <div class="result" id="result1">target here</div>
     </div>
     <script>
@@ -133,6 +160,29 @@
             }
         }
 
+        const sum = async () => {
+            const contractAddress = document.querySelector("#address").value
+            const number1 = document.querySelector("#number1").value;
+            const number2 = document.querySelector("#number2").value;
+            const resultDiv = document.querySelector("#result2")
+            const a = Number(number1)
+            const b = Number(number2)
+
+            try {
+                await window.ethereum.request({ method: "eth_requestAccounts" });
+                const abi = await loadABI();
+                const account = window.ethereum.selectedAddress
+                const contract = new web3.eth.Contract(abi, contractAddress);
+
+                console.log(`calling...`);
+                const result = await contract.methods.sum(a, b).call();
+                resultDiv.innerHTML = `result: ${a} + ${b} = ${result}`;
+            } catch (error) {
+                console.log(error);
+                resultDiv.innerHTML = `error: ${error.message}`;
+            }
+        }
+
         const isOver = async () => {
             const contractAddress = document.querySelector("#address").value
             const target = document.querySelector("#target").value;
@@ -150,11 +200,13 @@
 
                 console.log(`calling...`);
                 const result = await contract.methods.isOver(target).call();
-                resultDiv.innerHTML = `Is count greater than ${target}? ${result}`;
+                resultDiv.innerHTML = `result: ${target}? ${result}`;
             } catch (error) {
                 console.log(error);
-                resultDiv.innerHTML = `error: ${error.message}`;
+                resultDiv.innerHTML = `error: ${error}`;
             }
+
+
 
 
         }
