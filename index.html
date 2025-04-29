@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin-top: 50px;
+        }
+
+        .input-group {
+            margin: 30px 20px 10px 20px;
+        }
+
+        .input-group>input {
+            width: 600px;
+            height: 35px;
+            margin: 20px 20px 0 20px;
+            border-radius: 8px;
+
+        }
+
+        .input-group>button {
+            cursor: pointer;
+            padding: 10px 15px 10px 15px;
+            background-color: wheat;
+            border: 0;
+            border-radius: 8px;
+            margin: 0 6px 0 6px;
+        }
+
+        .result {
+            margin: 30px 0 10px 60px;
+            font-size: 20px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Counter</h1>
+
+        <div class="input-group">
+            <input type="text" id="address" placeholder="  Enter your contract address">
+            <button onclick="walletConnect()">Connection</button>
+            <button onclick="getCount()">Check</button>
+            <button onclick="increment()">Increase</button>
+            <button onclick="sum()">Sum</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="target" placeholder="  Enter your number">
+            <button onclick="isOver()">Comparison</button>
+        </div>
+        <div class="result" id="result">result will be here</div>
+        <div class="result" id="result1">target here</div>
+    </div>
+    <script>
+        let web3;
+        if (typeof window.ethereum !== "undefined") {
+            web3 = new Web3(window.ethereum);
+        } else {
+            alert("Metamask is not install")
+        }
+
+        const loadABI = async () => {
+            const { data } = await axios.get("contracts_Counter_sol_Counter.abi");
+            return data
+        }
+
+        const walletConnect = async () => {
+            const resultDiv = document.getElementById("result");
+
+            try {
+                const accounts = await window.ethereum.request({
+                    method: "eth_requestAccounts"
+                })
+
+                const address = accounts[0];
+                resultDiv.innerHTML = `wallet connect: ${address}`;
+            } catch (error) {
+                resultDiv.innerHTML = `failure: ${error.message}`;
+            }
+        }
+        const getCount = async () => {
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            const contractAddress = document.querySelector("#address").value;
+            const resultDiv = document.querySelector("#result");
+
+            if (!contractAddress) {
+                resultDiv.innerHTML = "please check contractAddress";
+                return;
+            }
+
+            try {
+                const abi = await loadABI();
+                const contract = new web3.eth.Contract(abi, contractAddress);
+                const count = await contract.methods.getCount().call();
+                resultDiv.innerHTML = `Current count: ${count}`;
+            } catch (error) {
+                resultDiv.innerHTML = `count Error: ${error.message}`;
+            }
+        }
+
+        const increment = async () => {
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            const contractAddress = document.querySelector("#address").value;
+            const resultDiv = document.querySelector("#result");
+
+            if (!contractAddress) {
+                resultDiv.innerHTML = "please check";
+            }
+
+            try {
+                const abi = await loadABI();
+                const contract = new web3.eth.Contract(abi, contractAddress);
+
+                const tx = await contract.methods.increment().send({ from: window.ethereum.selectedAddress });
+
+                resultDiv.innerHTML = `count Increase: ${tx.transactionHash}`
+            } catch (error) {
+                console.log(error);
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        const isOver = async () => {
+            const contractAddress = document.querySelector("#address").value
+            const target = document.querySelector("#target").value;
+            console.log(target);
+
+            const resultDiv = document.querySelector("#result1")
+
+            try {
+                await window.ethereum.request({ method: "eth_requestAccounts" });
+                const abi = await loadABI();
+                console.log(abi);
+
+                const account = window.ethereum.selectedAddress
+                const contract = new web3.eth.Contract(abi, contractAddress);
+
+                console.log(`calling...`);
+                const result = await contract.methods.isOver(target).call();
+                resultDiv.innerHTML = `Is count greater than ${target}? ${result}`;
+            } catch (error) {
+                console.log(error);
+                resultDiv.innerHTML = `error: ${error.message}`;
+            }
+
+
+        }
+    </script>
+</body>
+
+</html>
